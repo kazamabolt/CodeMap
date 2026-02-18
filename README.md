@@ -133,7 +133,7 @@ The core engine is invoked via CLI by both plugins. JSON output over stdout keep
 ## Project Structure
 
 ### Core Engine (`codemap-core`)
-|-----------------------------|------------------------------------------------------------------------|
+
 | Package                     | Purpose                                                                |
 |-----------------------------|------------------------------------------------------------------------|
 | `com.codemap.model`         | Data models (GraphNode, GraphEdge, CodeGraph, ClassInfo, MethodInfo)   |
@@ -145,14 +145,14 @@ The core engine is invoked via CLI by both plugins. JSON output over stdout keep
 | `com.codemap.serialization` | JSON serialization                                                     |
 | `com.codemap.cli`           | CLI entry point                                                        |
 | `com.codemap`               | CodeMapEngine façade                                                   |
-|-----------------------------|------------------------------------------------------------------------|
+
 
 ---
 
 ## Phase 2: Architecture Rule Engine
 
 Configurable rules to detect code quality issues:
-|-----------------------|------------------------------------------------|
+
 | Rule                  | Detects                                        |
 |-----------------------|------------------------------------------------|
 | `circular-dependency` | Circular dependencies between classes          |
@@ -160,6 +160,3 @@ Configurable rules to detect code quality issues:
 | `deep-inheritance`    | Inheritance chains beyond threshold            |
 | `unused-class`        | Classes with no incoming dependencies          |
 | `layer-violation`     | Violations of layered architecture conventions |
-|-----------------------|------------------------------------------------|
-
-
