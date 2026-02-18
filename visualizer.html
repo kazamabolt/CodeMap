@@ -1,0 +1,1410 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeMap - Dynamic Code Visualizer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface2: #1c2333;
+            --border: #30363d;
+            --border2: #2a3a4e;
+            --text: #e6edf3;
+            --text2: #8b949e;
+            --text3: #4a5a6e;
+            --accent: #58a6ff;
+            --green: #3fb950;
+            --green2: #56d364;
+            --purple: #bc8cff;
+            --cyan: #76e3ea;
+            --cyan2: #79dafa;
+            --yellow: #e3b341
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            z-index: 10
+        }
+
+        .header-left {
+            display: flex;
+            align-items: baseline;
+            gap: 8px
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .header .subtitle {
+            font-size: 12px;
+            color: var(--text2)
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-left: 8px
+        }
+
+        .badge-blue {
+            background: rgba(88, 166, 255, .15);
+            color: var(--accent)
+        }
+
+        .badge-green {
+            background: rgba(63, 185, 80, .15);
+            color: var(--green)
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 2px;
+            padding: 8px 20px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+            flex-wrap: wrap
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text2);
+            transition: all .2s;
+            border: 1px solid transparent;
+            border-bottom: none;
+            position: relative;
+            user-select: none
+        }
+
+        .tab:hover {
+            color: var(--text);
+            background: var(--surface2)
+        }
+
+        .tab.active {
+            color: var(--accent);
+            background: var(--surface2);
+            border-color: var(--border)
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+            border-radius: 2px 2px 0 0
+        }
+
+        .tabs-spacer {
+            flex: 1
+        }
+
+        .trace-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--bg);
+            background: linear-gradient(135deg, var(--green2), var(--cyan));
+            border: none;
+            transition: all .25s;
+            letter-spacing: .3px
+        }
+
+        .trace-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(86, 211, 100, .3)
+        }
+
+        .trace-btn.active {
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            box-shadow: 0 4px 16px rgba(88, 166, 255, .3)
+        }
+
+        .trace-btn svg {
+            width: 14px;
+            height: 14px
+        }
+
+        /* Main layout */
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-shrink: 0
+        }
+
+        .sidebar-section {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--text2);
+            margin-bottom: 8px
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 13px
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+            font-weight: 500
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 0;
+            font-size: 12px;
+            color: var(--text2)
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%
+        }
+
+        .legend-line {
+            width: 20px;
+            height: 2px;
+            border-radius: 1px
+        }
+
+        .node-list {
+            list-style: none;
+            max-height: 300px;
+            overflow-y: auto
+        }
+
+        .node-list li {
+            padding: 6px 10px;
+            margin: 2px 0;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: all .15s;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .node-list li:hover {
+            background: rgba(88, 166, 255, .08)
+        }
+
+        .node-list li.highlighted {
+            background: rgba(88, 166, 255, .15);
+            color: var(--accent)
+        }
+
+        .node-list .node-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0
+        }
+
+        /* Canvas */
+        .canvas-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg)
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            display: flex;
+            gap: 6px;
+            z-index: 5
+        }
+
+        .ctrl-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all .15s
+        }
+
+        .ctrl-btn:hover {
+            background: var(--surface2);
+            color: var(--text);
+            border-color: var(--accent)
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            pointer-events: none;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 12px;
+            max-width: 320px;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .5);
+            opacity: 0;
+            transition: opacity .15s
+        }
+
+        .tooltip.visible {
+            opacity: 1
+        }
+
+        .tooltip .tt-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px
+        }
+
+        .tooltip .tt-type {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 6px
+        }
+
+        .tooltip .tt-detail {
+            color: var(--text2);
+            line-height: 1.5
+        }
+
+        .tooltip .tt-detail code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+            font-size: 11px;
+            background: rgba(88, 166, 255, .1);
+            padding: 1px 4px;
+            border-radius: 3px
+        }
+
+        /* Views */
+        #graphView {
+            display: flex;
+            flex: 1;
+            overflow: hidden
+        }
+
+        #graphView.hidden {
+            display: none
+        }
+
+        #traceView {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+            flex-direction: column
+        }
+
+        #traceView.visible {
+            display: flex
+        }
+
+        /* Trace view */
+        .trace-header {
+            padding: 18px 28px;
+            background: linear-gradient(180deg, var(--surface2), var(--bg));
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+            flex-wrap: wrap
+        }
+
+        .trace-header h2 {
+            font-size: 17px;
+            font-weight: 700
+        }
+
+        .trace-header .pipe {
+            color: var(--border2);
+            font-size: 18px;
+            font-weight: 300
+        }
+
+        .trace-select {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 6px 12px;
+            cursor: pointer;
+            min-width: 200px
+        }
+
+        .trace-select:focus {
+            outline: none;
+            border-color: var(--accent)
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .3px
+        }
+
+        .tag-http {
+            background: rgba(86, 211, 100, .1);
+            color: var(--green2);
+            border: 1px solid rgba(86, 211, 100, .2)
+        }
+
+        .tag-depth {
+            background: rgba(188, 140, 255, .08);
+            color: var(--purple);
+            border: 1px solid rgba(188, 140, 255, .15)
+        }
+
+        .trace-stats {
+            display: flex;
+            gap: 28px;
+            padding: 12px 28px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            flex-wrap: wrap
+        }
+
+        .tstat {
+            display: flex;
+            flex-direction: column;
+            gap: 1px
+        }
+
+        .tstat-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--text3)
+        }
+
+        .tstat-val {
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace
+        }
+
+        .tstat-val.blue {
+            color: var(--accent)
+        }
+
+        .tstat-val.green {
+            color: var(--green2)
+        }
+
+        .tstat-val.purple {
+            color: var(--purple)
+        }
+
+        .tstat-val.orange {
+            color: var(--yellow)
+        }
+
+        .trace-body {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column
+        }
+
+        .trace-timeline-pane {
+            padding: 28px 32px
+        }
+
+        .trace-sequence-pane {
+            padding: 28px 32px;
+            border-top: 1px solid var(--border);
+            background: var(--surface)
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text3);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border)
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 36px
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent), var(--purple), var(--green), var(--yellow), var(--cyan));
+            border-radius: 1px;
+            opacity: .3
+        }
+
+        .trace-entry {
+            position: relative;
+            margin-bottom: 4px;
+            opacity: 0;
+            animation: slideIn .4s ease forwards
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0)
+            }
+        }
+
+        .trace-dot {
+            position: absolute;
+            left: -36px;
+            top: 14px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid;
+            background: var(--bg);
+            z-index: 1;
+            transition: transform .2s, box-shadow .2s
+        }
+
+        .trace-entry:hover .trace-dot {
+            transform: scale(1.3);
+            box-shadow: 0 0 12px currentColor
+        }
+
+        .trace-entry.d0 .trace-dot {
+            border-color: var(--green2);
+            background: var(--green2)
+        }
+
+        .trace-entry.d1 .trace-dot {
+            border-color: var(--accent)
+        }
+
+        .trace-entry.d2 .trace-dot {
+            border-color: var(--purple)
+        }
+
+        .trace-entry.d3 .trace-dot {
+            border-color: var(--yellow);
+            background: var(--yellow)
+        }
+
+        .trace-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all .2s
+        }
+
+        .trace-card:hover {
+            border-color: var(--border2);
+            background: var(--surface2);
+            transform: translateX(4px)
+        }
+
+        .trace-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px
+        }
+
+        .trace-card-top .step-num {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text3);
+            font-family: 'JetBrains Mono', monospace
+        }
+
+        .trace-method {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap
+        }
+
+        .trace-method .cn {
+            color: var(--cyan2);
+            opacity: .7
+        }
+
+        .trace-method .dt {
+            color: var(--text3)
+        }
+
+        .trace-method .mn {
+            color: var(--text)
+        }
+
+        .trace-method .pr {
+            color: var(--text2);
+            font-weight: 400
+        }
+
+        .trace-desc {
+            font-size: 12px;
+            color: var(--text2);
+            line-height: 1.5
+        }
+
+        .trace-desc code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+            font-size: 11px;
+            background: rgba(88, 166, 255, .08);
+            padding: 1px 5px;
+            border-radius: 3px
+        }
+
+        .layer-badge {
+            display: inline-flex;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: .5px
+        }
+
+        .layer-controller {
+            background: rgba(86, 211, 100, .08);
+            color: var(--green2);
+            border: 1px solid rgba(86, 211, 100, .12)
+        }
+
+        .layer-bean {
+            background: rgba(121, 218, 250, .08);
+            color: var(--cyan2);
+            border: 1px solid rgba(121, 218, 250, .12)
+        }
+
+        .layer-dao {
+            background: rgba(188, 140, 255, .08);
+            color: var(--purple);
+            border: 1px solid rgba(188, 140, 255, .12)
+        }
+
+        .layer-misc {
+            background: rgba(227, 179, 65, .08);
+            color: var(--yellow);
+            border: 1px solid rgba(227, 179, 65, .12)
+        }
+
+        .indent1 {
+            margin-left: 36px
+        }
+
+        .indent2 {
+            margin-left: 72px
+        }
+
+        .indent3 {
+            margin-left: 108px
+        }
+
+        .trace-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .3s ease
+        }
+
+        .trace-entry.expanded .trace-detail {
+            max-height: 200px
+        }
+
+        .trace-detail-inner {
+            padding-top: 8px;
+            margin-top: 8px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text2);
+            line-height: 1.8
+        }
+
+        .trace-detail-inner .dlabel {
+            color: var(--text3);
+            font-weight: 600;
+            margin-right: 6px;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: .5px
+        }
+
+        .trace-detail-inner code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--cyan2);
+            font-size: 11px
+        }
+
+        .trace-sep {
+            position: relative;
+            margin: 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .trace-sep::before,
+        .trace-sep::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+            opacity: .5
+        }
+
+        .trace-sep .sep-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text3);
+            font-weight: 700;
+            white-space: nowrap
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>CodeMap</h1>
+            <span class="subtitle">Dynamic Code Visualizer</span>
+            <span class="badge badge-blue" id="bNodes">-</span>
+            <span class="badge badge-green" id="bEdges">-</span>
+        </div>
+    </div>
+    <div class="tabs">
+        <div class="tab active" data-mode="full">Full Graph</div>
+        <div class="tab" data-mode="calls">Calls Only</div>
+        <div class="tab" data-mode="deps">Dependencies</div>
+        <div class="tabs-spacer"></div>
+        <button class="trace-btn" id="traceToggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M3 12h4l3-9 4 18 3-9h4" />
+            </svg>
+            Trace
+        </button>
+    </div>
+    <div class="main">
+        <div id="graphView">
+            <div class="sidebar" id="sidebar"></div>
+            <div class="canvas-wrapper" id="cw">
+                <canvas id="gc"></canvas>
+                <div class="controls">
+                    <button class="ctrl-btn" id="btnZoomIn">+</button>
+                    <button class="ctrl-btn" id="btnZoomOut">-</button>
+                    <button class="ctrl-btn" id="btnReset">R</button>
+                </div>
+            </div>
+        </div>
+        <div id="traceView">
+            <div class="trace-header">
+                <h2>Execution Trace</h2>
+                <span class="pipe">|</span>
+                <select class="trace-select" id="epSelect"></select>
+                <div id="tagBox"></div>
+            </div>
+            <div class="trace-stats" id="tStats"></div>
+            <div class="trace-body">
+                <div class="trace-timeline-pane">
+                    <div class="section-title">Execution Timeline</div>
+                    <div class="timeline" id="traceTimeline"></div>
+                </div>
+                <div class="trace-sequence-pane">
+                    <div class="section-title">Sequence Diagram</div>
+                    <div id="seqDiagram" style="overflow-x:auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tooltip" id="tip"></div>
+
+    <script src="graph_data.js"></script>
+    <script>
+        (function () {
+            "use strict";
+
+            // ---- Data Processing ----
+            var nodeMap = {};
+            var callEdges = [];
+            var depEdges = [];
+            var containsEdges = [];
+            var outgoingCalls = {};
+            var classOfMethod = {};
+
+            FULL_GRAPH.graph.nodes.forEach(function (n) { nodeMap[n.id] = n; });
+            FULL_GRAPH.graph.edges.forEach(function (e) {
+                if (e.type === "CALLS") {
+                    callEdges.push(e);
+                    if (!outgoingCalls[e.source]) outgoingCalls[e.source] = [];
+                    outgoingCalls[e.source].push(e.target);
+                } else if (e.type === "DEPENDENCY") {
+                    depEdges.push(e);
+                } else if (e.type === "CONTAINS") {
+                    containsEdges.push(e);
+                    classOfMethod[e.target] = e.source;
+                }
+            });
+
+            // Find entry points (controller doPost/doGet/service methods)
+            var entryPoints = [];
+            FULL_GRAPH.graph.nodes.forEach(function (n) {
+                if (n.type === "METHOD" && (n.name === "doPost" || n.name === "doGet" || n.name === "service")) {
+                    var clsId = classOfMethod[n.id];
+                    var cls = clsId ? nodeMap[clsId] : null;
+                    if (cls && cls.qualifiedName && cls.qualifiedName.indexOf("controller") >= 0) {
+                        entryPoints.push({
+                            method: n,
+                            className: cls.name,
+                            httpMethod: n.name === "doPost" ? "POST" : "GET"
+                        });
+                    }
+                }
+            });
+
+            // ---- Color Maps ----
+            var typeColors = { CLASS: "#58a6ff", METHOD: "#bc8cff", CONSTRUCTOR: "#56d364" };
+            var edgeColors = { CALLS: "#58a6ff", DEPENDENCY: "#3fb950", CONTAINS: "#4a5a6e" };
+            var layerColors = { controller: "#56d364", bean: "#79dafa", dao: "#bc8cff", misc: "#e3b341" };
+
+            function getLayer(qn) {
+                if (!qn) return "misc";
+                if (qn.indexOf(".controller.") >= 0) return "controller";
+                if (qn.indexOf(".bean.") >= 0) return "bean";
+                if (qn.indexOf(".dao.") >= 0) return "dao";
+                return "misc";
+            }
+
+            // ---- Graph Rendering ----
+            var graphNodes = [];
+            var graphEdges = [];
+            var highlightedNode = null;
+            var camera = { x: 0, y: 0, zoom: 1 };
+            var dragNode = null;
+            var panStart = null;
+
+            var canvas = document.getElementById("gc");
+            var ctx = canvas.getContext("2d");
+            var textColor = "#e6edf3";
+
+            function buildViewData(mode) {
+                var nSet = {};
+                var edges = [];
+                if (mode === "calls") {
+                    callEdges.forEach(function (e) { nSet[e.source] = 1; nSet[e.target] = 1; edges.push(e); });
+                } else if (mode === "deps") {
+                    depEdges.forEach(function (e) { nSet[e.source] = 1; nSet[e.target] = 1; edges.push(e); });
+                } else {
+                    depEdges.forEach(function (e) { nSet[e.source] = 1; nSet[e.target] = 1; edges.push(e); });
+                    callEdges.forEach(function (e) { nSet[e.source] = 1; nSet[e.target] = 1; edges.push(e); });
+                }
+                var nodes = [];
+                Object.keys(nSet).forEach(function (id) { if (nodeMap[id]) nodes.push(nodeMap[id]); });
+                return { nodes: nodes, edges: edges };
+            }
+
+            function initGraph(mode) {
+                var data = buildViewData(mode);
+                var w = canvas.parentElement.clientWidth;
+                var h = canvas.parentElement.clientHeight;
+                graphNodes = data.nodes.map(function (n, i) {
+                    var angle = (2 * Math.PI * i) / data.nodes.length;
+                    var r = Math.min(w, h) * 0.35;
+                    return {
+                        id: n.id, name: n.name, qualifiedName: n.qualifiedName, type: n.type,
+                        filePath: n.filePath, lineNumber: n.lineNumber, metadata: n.metadata,
+                        x: w / 2 + r * Math.cos(angle) + (Math.random() - 0.5) * 60,
+                        y: h / 2 + r * Math.sin(angle) + (Math.random() - 0.5) * 60,
+                        vx: 0, vy: 0,
+                        radius: n.type === "CLASS" ? 22 : 14
+                    };
+                });
+                graphEdges = data.edges;
+                camera = { x: 0, y: 0, zoom: 1 };
+                highlightedNode = null;
+                updateSidebar();
+                updateBadges();
+                simulate();
+            }
+
+            function updateBadges() {
+                document.getElementById("bNodes").textContent = graphNodes.length + " nodes";
+                document.getElementById("bEdges").textContent = graphEdges.length + " edges";
+            }
+
+            function updateSidebar() {
+                var sb = document.getElementById("sidebar");
+                var classes = graphNodes.filter(function (n) { return n.type === "CLASS"; }).length;
+                var methods = graphNodes.filter(function (n) { return n.type === "METHOD"; }).length;
+                var html = '<div class="sidebar-section"><div class="sidebar-title">Stats</div>';
+                html += '<div class="stat"><span>Nodes</span><span class="stat-value">' + graphNodes.length + '</span></div>';
+                html += '<div class="stat"><span>Edges</span><span class="stat-value">' + graphEdges.length + '</span></div>';
+                html += '<div class="stat"><span>Classes</span><span class="stat-value">' + classes + '</span></div>';
+                html += '<div class="stat"><span>Methods</span><span class="stat-value">' + methods + '</span></div></div>';
+                html += '<div class="sidebar-section"><div class="sidebar-title">Legend</div>';
+                ["CLASS", "METHOD", "CONSTRUCTOR"].forEach(function (k) {
+                    html += '<div class="legend-item"><div class="legend-dot" style="background:' + typeColors[k] + '"></div>' + k + '</div>';
+                });
+                var edgeTypes = {};
+                graphEdges.forEach(function (e) { edgeTypes[e.type] = 1; });
+                Object.keys(edgeTypes).forEach(function (t) {
+                    html += '<div class="legend-item"><div class="legend-line" style="background:' + (edgeColors[t] || "#555") + '"></div>' + t + '</div>';
+                });
+                html += '</div><div class="sidebar-section"><div class="sidebar-title">Nodes</div><ul class="node-list">';
+                graphNodes.forEach(function (n) {
+                    var c = typeColors[n.type] || "#888";
+                    html += '<li data-nid="' + n.id + '"><div class="node-icon" style="background:' + c + '"></div>' + n.name + '</li>';
+                });
+                html += '</ul></div>';
+                sb.innerHTML = html;
+                // Attach click handlers
+                sb.querySelectorAll(".node-list li").forEach(function (li) {
+                    li.addEventListener("click", function () { toggleHighlight(li.getAttribute("data-nid")); });
+                });
+            }
+
+            function toggleHighlight(id) {
+                highlightedNode = (highlightedNode === id) ? null : id;
+                document.querySelectorAll(".node-list li").forEach(function (li) {
+                    li.classList.toggle("highlighted", li.getAttribute("data-nid") === highlightedNode);
+                });
+                draw();
+            }
+
+            // Force simulation
+            var simRunning = false;
+            var simFrame = 0;
+
+            function simulate() {
+                simRunning = true;
+                simFrame = 0;
+                function step() {
+                    if (!simRunning || simFrame > 300) { simRunning = false; draw(); return; }
+                    simFrame++;
+                    var alpha = Math.max(0.01, 0.3 * Math.pow(0.99, simFrame));
+                    var i, j, dx, dy, d, force;
+                    // Repulsion
+                    for (i = 0; i < graphNodes.length; i++) {
+                        for (j = i + 1; j < graphNodes.length; j++) {
+                            dx = graphNodes[j].x - graphNodes[i].x;
+                            dy = graphNodes[j].y - graphNodes[i].y;
+                            d = Math.sqrt(dx * dx + dy * dy) || 1;
+                            force = 3000 / (d * d);
+                            graphNodes[i].vx -= (dx / d) * force * alpha;
+                            graphNodes[i].vy -= (dy / d) * force * alpha;
+                            graphNodes[j].vx += (dx / d) * force * alpha;
+                            graphNodes[j].vy += (dy / d) * force * alpha;
+                        }
+                    }
+                    // Attraction
+                    var idxMap = {};
+                    graphNodes.forEach(function (n, idx) { idxMap[n.id] = idx; });
+                    graphEdges.forEach(function (e) {
+                        var si = idxMap[e.source], ti = idxMap[e.target];
+                        if (si === undefined || ti === undefined) return;
+                        dx = graphNodes[ti].x - graphNodes[si].x;
+                        dy = graphNodes[ti].y - graphNodes[si].y;
+                        d = Math.sqrt(dx * dx + dy * dy) || 1;
+                        force = (d - 120) * 0.05 * alpha;
+                        graphNodes[si].vx += (dx / d) * force;
+                        graphNodes[si].vy += (dy / d) * force;
+                        graphNodes[ti].vx -= (dx / d) * force;
+                        graphNodes[ti].vy -= (dy / d) * force;
+                    });
+                    // Center gravity
+                    var cx = canvas.width / 2, cy = canvas.height / 2;
+                    graphNodes.forEach(function (n) {
+                        n.vx += (cx - n.x) * 0.01 * alpha;
+                        n.vy += (cy - n.y) * 0.01 * alpha;
+                        n.x += n.vx * 0.8;
+                        n.y += n.vy * 0.8;
+                        n.vx *= 0.6;
+                        n.vy *= 0.6;
+                    });
+                    draw();
+                    requestAnimationFrame(step);
+                }
+                step();
+            }
+
+            function draw() {
+                var w = canvas.parentElement.clientWidth;
+                var h = canvas.parentElement.clientHeight;
+                canvas.width = w;
+                canvas.height = h;
+                ctx.clearRect(0, 0, w, h);
+                ctx.save();
+                ctx.translate(camera.x, camera.y);
+                ctx.scale(camera.zoom, camera.zoom);
+
+                var idxMap = {};
+                graphNodes.forEach(function (n, idx) { idxMap[n.id] = idx; });
+
+                // Draw edges
+                graphEdges.forEach(function (e) {
+                    var si = idxMap[e.source], ti = idxMap[e.target];
+                    if (si === undefined || ti === undefined) return;
+                    var s = graphNodes[si], t = graphNodes[ti];
+                    var isHl = highlightedNode && (e.source === highlightedNode || e.target === highlightedNode);
+                    ctx.beginPath();
+                    ctx.moveTo(s.x, s.y);
+                    ctx.lineTo(t.x, t.y);
+                    ctx.strokeStyle = isHl ? "#fff" : (edgeColors[e.type] || "#555");
+                    ctx.globalAlpha = highlightedNode ? (isHl ? 1 : 0.1) : 0.4;
+                    ctx.lineWidth = isHl ? 2.5 : 1.2;
+                    ctx.setLineDash(e.type === "DEPENDENCY" ? [5, 3] : []);
+                    ctx.stroke();
+                    // Arrowhead
+                    var angle = Math.atan2(t.y - s.y, t.x - s.x);
+                    var tr = graphNodes[ti].radius + 4;
+                    var ax = t.x - Math.cos(angle) * tr;
+                    var ay = t.y - Math.sin(angle) * tr;
+                    ctx.beginPath();
+                    ctx.moveTo(ax, ay);
+                    ctx.lineTo(ax - Math.cos(angle - 0.35) * 8, ay - Math.sin(angle - 0.35) * 8);
+                    ctx.lineTo(ax - Math.cos(angle + 0.35) * 8, ay - Math.sin(angle + 0.35) * 8);
+                    ctx.closePath();
+                    ctx.fillStyle = ctx.strokeStyle;
+                    ctx.fill();
+                    ctx.setLineDash([]);
+                });
+
+                // Edge labels at zoom > 0.6
+                ctx.globalAlpha = 1;
+                if (camera.zoom > 0.6) {
+                    graphEdges.forEach(function (e) {
+                        var si = idxMap[e.source], ti = idxMap[e.target];
+                        if (si === undefined || ti === undefined) return;
+                        var s = graphNodes[si], t = graphNodes[ti];
+                        var isHl = highlightedNode && (e.source === highlightedNode || e.target === highlightedNode);
+                        if (!highlightedNode || isHl) {
+                            ctx.font = "9px 'JetBrains Mono'";
+                            ctx.fillStyle = edgeColors[e.type] || "#555";
+                            ctx.globalAlpha = highlightedNode ? 0.8 : 0.3;
+                            ctx.textAlign = "center";
+                            ctx.fillText(e.type, (s.x + t.x) / 2, (s.y + t.y) / 2 - 5);
+                        }
+                    });
+                }
+                ctx.globalAlpha = 1;
+
+                // Draw nodes
+                graphNodes.forEach(function (n) {
+                    var isHl = (n.id === highlightedNode);
+                    var conn = highlightedNode && graphEdges.some(function (e) {
+                        return (e.source === highlightedNode && e.target === n.id) || (e.target === highlightedNode && e.source === n.id);
+                    });
+                    ctx.globalAlpha = highlightedNode ? ((isHl || conn) ? 1 : 0.15) : 1;
+                    var col = layerColors[getLayer(n.qualifiedName)] || typeColors[n.type] || "#888";
+                    // Glow for highlighted
+                    if (isHl) {
+                        ctx.beginPath();
+                        ctx.arc(n.x, n.y, n.radius + 8, 0, Math.PI * 2);
+                        var grad = ctx.createRadialGradient(n.x, n.y, n.radius, n.x, n.y, n.radius + 8);
+                        grad.addColorStop(0, col + "40");
+                        grad.addColorStop(1, "transparent");
+                        ctx.fillStyle = grad;
+                        ctx.fill();
+                    }
+                    // Node circle
+                    ctx.beginPath();
+                    ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = col + "20";
+                    ctx.fill();
+                    ctx.strokeStyle = col;
+                    ctx.lineWidth = isHl ? 3 : 1.5;
+                    ctx.stroke();
+                    // Label below node
+                    ctx.font = (isHl ? "600" : "500") + " " + (n.type === "CLASS" ? 11 : 9) + "px 'Inter'";
+                    ctx.fillStyle = textColor;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(n.name, n.x, n.y + n.radius + 14);
+                    // Type icon inside node
+                    ctx.font = "600 9px 'JetBrains Mono'";
+                    ctx.fillStyle = col;
+                    ctx.fillText(n.type === "CLASS" ? "C" : "M", n.x, n.y);
+                });
+                ctx.restore();
+            }
+
+            // ---- Canvas Interaction ----
+            canvas.addEventListener("mousedown", function (e) {
+                var mx = (e.offsetX - camera.x) / camera.zoom;
+                var my = (e.offsetY - camera.y) / camera.zoom;
+                dragNode = graphNodes.find(function (n) { return Math.hypot(n.x - mx, n.y - my) < n.radius + 5; }) || null;
+                if (dragNode) { simRunning = false; }
+                else { panStart = { x: e.offsetX - camera.x, y: e.offsetY - camera.y }; }
+            });
+
+            canvas.addEventListener("mousemove", function (e) {
+                if (dragNode) {
+                    dragNode.x = (e.offsetX - camera.x) / camera.zoom;
+                    dragNode.y = (e.offsetY - camera.y) / camera.zoom;
+                    draw();
+                } else if (panStart) {
+                    camera.x = e.offsetX - panStart.x;
+                    camera.y = e.offsetY - panStart.y;
+                    draw();
+                } else {
+                    var mx = (e.offsetX - camera.x) / camera.zoom;
+                    var my = (e.offsetY - camera.y) / camera.zoom;
+                    var hov = graphNodes.find(function (n) { return Math.hypot(n.x - mx, n.y - my) < n.radius + 5; });
+                    var tip = document.getElementById("tip");
+                    if (hov) {
+                        tip.innerHTML = '<div class="tt-name">' + hov.name + '</div>' +
+                            '<div class="tt-type" style="background:' + (typeColors[hov.type] || "#888") + '20;color:' + (typeColors[hov.type] || "#888") + '">' + hov.type + '</div>' +
+                            '<div class="tt-detail"><code>' + hov.qualifiedName + '</code><br>Line: ' + (hov.lineNumber || "?") + '</div>';
+                        tip.style.left = (e.clientX + 15) + "px";
+                        tip.style.top = (e.clientY + 15) + "px";
+                        tip.classList.add("visible");
+                    } else {
+                        tip.classList.remove("visible");
+                    }
+                }
+            });
+
+            canvas.addEventListener("mouseup", function () { dragNode = null; panStart = null; });
+
+            canvas.addEventListener("wheel", function (e) {
+                e.preventDefault();
+                var delta = e.deltaY > 0 ? 0.9 : 1.1;
+                camera.zoom *= delta;
+                camera.x = e.offsetX - (e.offsetX - camera.x) * delta;
+                camera.y = e.offsetY - (e.offsetY - camera.y) * delta;
+                draw();
+            }, { passive: false });
+
+            canvas.addEventListener("dblclick", function (e) {
+                var mx = (e.offsetX - camera.x) / camera.zoom;
+                var my = (e.offsetY - camera.y) / camera.zoom;
+                var nd = graphNodes.find(function (n) { return Math.hypot(n.x - mx, n.y - my) < n.radius + 5; });
+                if (nd) toggleHighlight(nd.id);
+            });
+
+            document.getElementById("btnZoomIn").addEventListener("click", function () { camera.zoom *= 1.2; draw(); });
+            document.getElementById("btnZoomOut").addEventListener("click", function () { camera.zoom *= 0.8; draw(); });
+            document.getElementById("btnReset").addEventListener("click", function () { camera = { x: 0, y: 0, zoom: 1 }; draw(); });
+
+            // ---- Tab Switching ----
+            document.querySelectorAll(".tab").forEach(function (tab) {
+                tab.addEventListener("click", function () {
+                    document.querySelectorAll(".tab").forEach(function (t) { t.classList.remove("active"); });
+                    tab.classList.add("active");
+                    document.getElementById("traceToggle").classList.remove("active");
+                    document.getElementById("graphView").classList.remove("hidden");
+                    document.getElementById("traceView").classList.remove("visible");
+                    initGraph(tab.getAttribute("data-mode"));
+                });
+            });
+
+            // ---- Trace View ----
+            var epSelect = document.getElementById("epSelect");
+            entryPoints.forEach(function (ep, i) {
+                var opt = document.createElement("option");
+                opt.value = i;
+                opt.textContent = ep.httpMethod + " /" + ep.className + " -> " + ep.className + "." + ep.method.name + "()";
+                epSelect.appendChild(opt);
+            });
+
+            document.getElementById("traceToggle").addEventListener("click", function () {
+                var active = document.getElementById("traceToggle").classList.toggle("active");
+                document.getElementById("graphView").classList.toggle("hidden", active);
+                document.getElementById("traceView").classList.toggle("visible", active);
+                document.querySelectorAll(".tab").forEach(function (t) { if (active) t.classList.remove("active"); });
+                if (active && entryPoints.length > 0) buildTrace(0);
+            });
+
+            epSelect.addEventListener("change", function () { buildTrace(parseInt(epSelect.value)); });
+
+            function buildTrace(idx) {
+                var ep = entryPoints[idx];
+                if (!ep) return;
+
+                // DFS to build trace steps
+                var steps = [];
+                var visited = {};
+                function dfs(methodId, depth) {
+                    if (visited[methodId] || depth > 5) return;
+                    visited[methodId] = true;
+                    var node = nodeMap[methodId];
+                    if (!node) return;
+                    var clsId = classOfMethod[methodId];
+                    var cls = clsId ? nodeMap[clsId] : null;
+                    steps.push({ node: node, cls: cls, depth: depth });
+                    var calls = outgoingCalls[methodId] || [];
+                    calls.forEach(function (targetId) { dfs(targetId, depth + 1); });
+                }
+                dfs(ep.method.id, 0);
+
+                // Stats
+                var uniqueClasses = {};
+                var maxDepth = 0;
+                var uniqueLayers = {};
+                steps.forEach(function (s) {
+                    if (s.cls) uniqueClasses[s.cls.name] = 1;
+                    if (s.depth > maxDepth) maxDepth = s.depth;
+                    uniqueLayers[getLayer(s.cls ? s.cls.qualifiedName : null)] = 1;
+                });
+
+                document.getElementById("tagBox").innerHTML =
+                    '<span class="tag tag-http">' + ep.httpMethod + ' /' + ep.className + '</span>' +
+                    '<span class="tag tag-depth">Depth: ' + maxDepth + '</span>';
+
+                document.getElementById("tStats").innerHTML =
+                    '<div class="tstat"><div class="tstat-label">Steps</div><div class="tstat-val blue">' + steps.length + '</div></div>' +
+                    '<div class="tstat"><div class="tstat-label">Classes</div><div class="tstat-val green">' + Object.keys(uniqueClasses).length + '</div></div>' +
+                    '<div class="tstat"><div class="tstat-label">Max Depth</div><div class="tstat-val purple">' + maxDepth + '</div></div>' +
+                    '<div class="tstat"><div class="tstat-label">Layers</div><div class="tstat-val orange">' + Object.keys(uniqueLayers).length + '</div></div>';
+
+                // Build timeline
+                var prevLayer = "";
+                var html = "";
+                steps.forEach(function (s, i) {
+                    var ly = getLayer(s.cls ? s.cls.qualifiedName : null);
+                    if (ly !== prevLayer && i > 0) {
+                        html += '<div class="trace-sep"><span class="sep-label">' + ly.toUpperCase() + ' LAYER</span></div>';
+                    }
+                    prevLayer = ly;
+                    var cn = s.cls ? s.cls.name : "?";
+                    var mn = s.node.name;
+                    var prMatch = s.node.qualifiedName.match(/\(([^)]*)\)/);
+                    var pr = prMatch ? prMatch[1] : "";
+                    var rt = (s.node.metadata && s.node.metadata.returnType) ? s.node.metadata.returnType : "void";
+                    var fp = (s.node.filePath || "").split("\\").pop() || "?";
+                    var dClass = "d" + Math.min(s.depth, 3);
+                    var indClass = s.depth > 0 ? " indent" + Math.min(s.depth, 3) : "";
+
+                    html += '<div class="trace-entry ' + dClass + '" style="animation-delay:' + (i * 0.04) + 's" onclick="this.classList.toggle(\'expanded\')">';
+                    html += '<div class="trace-dot"></div>';
+                    html += '<div class="trace-card' + indClass + '">';
+                    html += '<div class="trace-card-top"><span class="step-num">STEP ' + (i + 1) + '</span>';
+                    html += '<span class="layer-badge layer-' + ly + '">' + ly.toUpperCase() + '</span></div>';
+                    html += '<div class="trace-method"><span class="cn">' + cn + '</span><span class="dt">.</span>';
+                    html += '<span class="mn">' + mn + '</span><span class="pr">(' + pr + ')</span></div>';
+                    html += '<div class="trace-desc">Returns <code>' + rt + '</code> &middot; Depth ' + s.depth + '</div>';
+                    html += '<div class="trace-detail"><div class="trace-detail-inner">';
+                    html += '<span class="dlabel">Class:</span> <code>' + (s.cls ? s.cls.qualifiedName : "?") + '</code><br>';
+                    html += '<span class="dlabel">File:</span> <code>' + fp + '</code><br>';
+                    html += '<span class="dlabel">Line:</span> <code>' + (s.node.lineNumber || "?") + '</code><br>';
+                    html += '<span class="dlabel">Access:</span> <code>' + ((s.node.metadata && s.node.metadata.access) || "?") + '</code>';
+                    html += '</div></div></div></div>';
+                });
+                document.getElementById("traceTimeline").innerHTML = html;
+
+                // Build sequence diagram
+                buildSequenceDiagram(steps);
+            }
+
+            function buildSequenceDiagram(steps) {
+                var actorNames = [];
+                var actorSet = {};
+                steps.forEach(function (s) {
+                    var nm = s.cls ? s.cls.name : "?";
+                    if (!actorSet[nm]) { actorSet[nm] = true; actorNames.push(nm); }
+                });
+                var actors = actorNames.map(function (nm) {
+                    var s = steps.find(function (st) { return st.cls && st.cls.name === nm; });
+                    var ly = getLayer(s && s.cls ? s.cls.qualifiedName : null);
+                    return { label: nm, color: layerColors[ly] || "#8b949e" };
+                });
+                if (actors.length === 0) { document.getElementById("seqDiagram").innerHTML = ""; return; }
+
+                // Build messages via DFS of call edges
+                var msgs = [];
+                var visited2 = {};
+                function buildMsgs(methodId, depth) {
+                    if (visited2[methodId] || depth > 5) return;
+                    visited2[methodId] = true;
+                    var srcNode = nodeMap[methodId];
+                    var srcClsId = classOfMethod[methodId];
+                    var srcCls = srcClsId ? nodeMap[srcClsId] : null;
+                    if (!srcNode || !srcCls) return;
+                    var srcIdx = actorNames.indexOf(srcCls.name);
+                    var calls = outgoingCalls[methodId] || [];
+                    calls.forEach(function (targetId) {
+                        var tgtNode = nodeMap[targetId];
+                        var tgtClsId = classOfMethod[targetId];
+                        var tgtCls = tgtClsId ? nodeMap[tgtClsId] : null;
+                        if (!tgtNode || !tgtCls) return;
+                        var tgtIdx = actorNames.indexOf(tgtCls.name);
+                        if (srcIdx >= 0 && tgtIdx >= 0) {
+                            msgs.push({ from: srcIdx, to: tgtIdx, label: tgtNode.name + "()", type: srcIdx === tgtIdx ? "self" : "sync" });
+                        }
+                        buildMsgs(targetId, depth + 1);
+                        if (srcIdx >= 0 && tgtIdx >= 0 && srcIdx !== tgtIdx) {
+                            var retType = (tgtNode.metadata && tgtNode.metadata.returnType) || "void";
+                            if (retType !== "void") {
+                                msgs.push({ from: tgtIdx, to: srcIdx, label: retType, type: "return" });
+                            }
+                        }
+                    });
+                }
+                if (steps.length > 0) buildMsgs(steps[0].node.id, 0);
+
+                if (msgs.length === 0) {
+                    document.getElementById("seqDiagram").innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px">No call edges to diagram</div>';
+                    return;
+                }
+
+                var aW = 150, yS = 80, yStep = 38, pad = 30;
+                var svgW = actors.length * aW + pad * 2;
+                var svgH = yS + msgs.length * yStep + 60;
+                var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + svgW + '" height="' + svgH + '" viewBox="0 0 ' + svgW + ' ' + svgH + '">';
+                actors.forEach(function (a, i) {
+                    var x = pad + i * aW + aW / 2;
+                    svg += '<rect x="' + (x - 55) + '" y="8" width="110" height="46" rx="8" fill="' + a.color + '12" stroke="' + a.color + '" stroke-width="1.5"/>';
+                    svg += '<text x="' + x + '" y="36" text-anchor="middle" fill="' + a.color + '" font-size="11" font-weight="600">' + a.label + '</text>';
+                    svg += '<line x1="' + x + '" y1="54" x2="' + x + '" y2="' + (svgH - 15) + '" stroke="' + a.color + '" stroke-width="1" stroke-dasharray="4 3" opacity=".25"/>';
+                });
+                msgs.forEach(function (m, i) {
+                    var y = yS + i * yStep;
+                    var fx = pad + m.from * aW + aW / 2;
+                    var tx = pad + m.to * aW + aW / 2;
+                    if (m.type === "self") {
+                        svg += '<path d="M' + fx + ',' + y + ' h28 v16 h-28" fill="none" stroke="#58a6ff" stroke-width="1.5"/>';
+                        svg += '<polygon points="' + fx + ',' + (y + 16) + ' ' + (fx + 6) + ',' + (y + 12) + ' ' + (fx + 6) + ',' + (y + 20) + '" fill="#58a6ff"/>';
+                        svg += '<text x="' + (fx + 32) + '" y="' + (y + 4) + '" fill="#8b949e" font-size="10.5">' + m.label + '</text>';
+                    } else {
+                        var isRet = m.type === "return";
+                        var dir = tx > fx ? 1 : -1;
+                        var col = isRet ? "#3fb950" : "#58a6ff";
+                        svg += '<line x1="' + fx + '" y1="' + y + '" x2="' + (tx - dir * 2) + '" y2="' + y + '" stroke="' + col + '" stroke-width="1.5"' + (isRet ? ' stroke-dasharray="6 3"' : '') + '/>';
+                        svg += '<polygon points="' + tx + ',' + y + ' ' + (tx - dir * 8) + ',' + (y - 4) + ' ' + (tx - dir * 8) + ',' + (y + 4) + '" fill="' + col + '"/>';
+                        svg += '<text x="' + ((fx + tx) / 2) + '" y="' + (y - 7) + '" text-anchor="middle" fill="' + (isRet ? "#3fb950" : "#8b949e") + '" font-size="10.5" font-weight="' + (isRet ? "500" : "400") + '">' + m.label + '</text>';
+                    }
+                });
+                svg += '</svg>';
+                document.getElementById("seqDiagram").innerHTML = svg;
+            }
+
+            // ---- Init ----
+            window.addEventListener("resize", function () { if (!simRunning) draw(); });
+            initGraph("full");
+        })();
+    </script>
+</body>
+
+</html>

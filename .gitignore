@@ -1,0 +1,28 @@
+# Build output
+**/target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Maven wrapper downloaded
+.mvn/wrapper/maven-wrapper.jar
+
+# Node
+**/node_modules/
+**/dist/
+
+# Test output
+test_*.json
+fullgraph.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

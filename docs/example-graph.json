@@ -1,0 +1,161 @@
+{
+    "command": "callgraph",
+    "target": "com.example.Controller.handle(String)",
+    "timestamp": "2026-02-19T00:30:00Z",
+    "analysisTimeMs": 142,
+    "stats": {
+        "totalClassesParsed": 4,
+        "totalMethodsParsed": 7,
+        "graphNodes": 8,
+        "graphEdges": 7
+    },
+    "graph": {
+        "nodes": [
+            {
+                "id": "class:com.example.Controller",
+                "name": "Controller",
+                "qualifiedName": "com.example.Controller",
+                "type": "CLASS",
+                "filePath": "/src/com/example/Controller.java",
+                "lineNumber": 3,
+                "metadata": {
+                    "package": "com.example",
+                    "isAbstract": "false"
+                }
+            },
+            {
+                "id": "method:com.example.Controller.handle(String)",
+                "name": "handle",
+                "qualifiedName": "com.example.Controller.handle(String)",
+                "type": "METHOD",
+                "filePath": "/src/com/example/Controller.java",
+                "lineNumber": 10,
+                "metadata": {
+                    "returnType": "String",
+                    "access": "public",
+                    "isStatic": "false"
+                }
+            },
+            {
+                "id": "class:com.example.Service",
+                "name": "Service",
+                "qualifiedName": "com.example.Service",
+                "type": "INTERFACE",
+                "filePath": "/src/com/example/Service.java",
+                "lineNumber": 3,
+                "metadata": {
+                    "package": "com.example"
+                }
+            },
+            {
+                "id": "method:com.example.Service.process(String)",
+                "name": "process",
+                "qualifiedName": "com.example.Service.process(String)",
+                "type": "METHOD",
+                "filePath": "/src/com/example/Service.java",
+                "lineNumber": 4,
+                "metadata": {
+                    "returnType": "String",
+                    "access": "public"
+                }
+            },
+            {
+                "id": "class:com.example.ServiceImpl",
+                "name": "ServiceImpl",
+                "qualifiedName": "com.example.ServiceImpl",
+                "type": "CLASS",
+                "filePath": "/src/com/example/ServiceImpl.java",
+                "lineNumber": 3,
+                "metadata": {
+                    "package": "com.example",
+                    "isAbstract": "false"
+                }
+            },
+            {
+                "id": "method:com.example.ServiceImpl.process(String)",
+                "name": "process",
+                "qualifiedName": "com.example.ServiceImpl.process(String)",
+                "type": "METHOD",
+                "filePath": "/src/com/example/ServiceImpl.java",
+                "lineNumber": 10,
+                "metadata": {
+                    "returnType": "String",
+                    "access": "public"
+                }
+            },
+            {
+                "id": "method:com.example.ServiceImpl.transform(String)",
+                "name": "transform",
+                "qualifiedName": "com.example.ServiceImpl.transform(String)",
+                "type": "METHOD",
+                "filePath": "/src/com/example/ServiceImpl.java",
+                "lineNumber": 16,
+                "metadata": {
+                    "returnType": "String",
+                    "access": "private"
+                }
+            },
+            {
+                "id": "class:com.example.Repository",
+                "name": "Repository",
+                "qualifiedName": "com.example.Repository",
+                "type": "CLASS",
+                "filePath": "/src/com/example/Repository.java",
+                "lineNumber": 3,
+                "metadata": {
+                    "package": "com.example"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "id": "e1",
+                "source": "method:com.example.Controller.handle(String)",
+                "target": "method:com.example.Service.process(String)",
+                "type": "CALLS"
+            },
+            {
+                "id": "e2",
+                "source": "method:com.example.ServiceImpl.process(String)",
+                "target": "method:com.example.ServiceImpl.transform(String)",
+                "type": "CALLS"
+            },
+            {
+                "id": "e3",
+                "source": "class:com.example.ServiceImpl",
+                "target": "class:com.example.Service",
+                "type": "IMPLEMENTS"
+            },
+            {
+                "id": "e4",
+                "source": "class:com.example.Controller",
+                "target": "class:com.example.Service",
+                "type": "DEPENDENCY",
+                "metadata": {
+                    "via": "field"
+                }
+            },
+            {
+                "id": "e5",
+                "source": "class:com.example.ServiceImpl",
+                "target": "class:com.example.Repository",
+                "type": "DEPENDENCY",
+                "metadata": {
+                    "via": "field"
+                }
+            },
+            {
+                "id": "e6",
+                "source": "class:com.example.Controller",
+                "target": "method:com.example.Controller.handle(String)",
+                "type": "CONTAINS"
+            },
+            {
+                "id": "e7",
+                "source": "class:com.example.ServiceImpl",
+                "target": "method:com.example.ServiceImpl.process(String)",
+                "type": "CONTAINS"
+            }
+        ]
+    }
+}

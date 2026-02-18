@@ -1,0 +1,54 @@
+<idea-plugin>
+    <id>com.codemap.intellij</id>
+    <name>CodeMap - Code Flow Visualization</name>
+    <vendor>CodeMap</vendor>
+    <version>1.0.0</version>
+
+    <description><![CDATA[
+        <p>Visualize Java code interactions — method call chains, class dependencies, and impact analysis.</p>
+        <ul>
+            <li>Show Method Flow — visual graph of execution chain</li>
+            <li>Who Calls This? — reverse call graph</li>
+            <li>Show Class Dependencies — dependency diagram</li>
+            <li>Impact Analysis — shows affected classes if modified</li>
+        </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="CodeMap"
+                     factoryClass="com.codemap.intellij.ui.GraphToolWindowFactory"
+                     anchor="bottom"
+                     icon="/icons/codemap.svg"
+                     secondary="false" />
+    </extensions>
+
+    <actions>
+        <group id="CodeMap.EditorPopup" text="CodeMap" popup="true"
+               description="CodeMap code analysis actions">
+            <add-to-group group-id="EditorPopupMenu" anchor="last" />
+
+            <action id="CodeMap.ShowMethodFlow"
+                    class="com.codemap.intellij.actions.ShowMethodFlowAction"
+                    text="Show Method Flow"
+                    description="Show the method call chain starting from this method" />
+
+            <action id="CodeMap.ShowCallers"
+                    class="com.codemap.intellij.actions.ShowCallersAction"
+                    text="Who Calls This?"
+                    description="Show which methods call this method" />
+
+            <action id="CodeMap.ShowDependencies"
+                    class="com.codemap.intellij.actions.ShowDependenciesAction"
+                    text="Show Class Dependencies"
+                    description="Show class dependency diagram" />
+
+            <action id="CodeMap.ShowImpactAnalysis"
+                    class="com.codemap.intellij.actions.ShowImpactAnalysisAction"
+                    text="Impact Analysis"
+                    description="Show classes affected if this class is modified" />
+        </group>
+    </actions>
+</idea-plugin>

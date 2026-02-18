@@ -1,0 +1,102 @@
+{
+  "name": "codemap-vscode",
+  "displayName": "CodeMap - Code Flow Visualization",
+  "description": "Analyze Java projects and visualize class/method interactions with interactive graphs",
+  "version": "1.0.0",
+  "publisher": "codemap",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Visualization",
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:java"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "codemap.showMethodFlow",
+        "title": "CodeMap: Show Method Flow"
+      },
+      {
+        "command": "codemap.showCallers",
+        "title": "CodeMap: Who Calls This?"
+      },
+      {
+        "command": "codemap.showDependencies",
+        "title": "CodeMap: Show Class Dependencies"
+      },
+      {
+        "command": "codemap.showImpactAnalysis",
+        "title": "CodeMap: Impact Analysis"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "codemap.showMethodFlow",
+          "when": "editorLangId == java",
+          "group": "codemap@1"
+        },
+        {
+          "command": "codemap.showCallers",
+          "when": "editorLangId == java",
+          "group": "codemap@2"
+        },
+        {
+          "command": "codemap.showDependencies",
+          "when": "editorLangId == java",
+          "group": "codemap@3"
+        },
+        {
+          "command": "codemap.showImpactAnalysis",
+          "when": "editorLangId == java",
+          "group": "codemap@4"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "CodeMap",
+      "properties": {
+        "codemap.javaHome": {
+          "type": "string",
+          "default": "",
+          "description": "Path to Java home directory"
+        },
+        "codemap.coreJarPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to codemap-core JAR file"
+        },
+        "codemap.defaultDepth": {
+          "type": "number",
+          "default": 5,
+          "description": "Default traversal depth for call graphs"
+        },
+        "codemap.excludePackages": {
+          "type": "array",
+          "default": [],
+          "description": "Package prefixes to exclude from analysis"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0"
+  }
+}
